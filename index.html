@@ -2,35 +2,43 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Akshay Joshi | Portfolio</title>
   <link rel="stylesheet" href="styles.css">
-  <!-- Nimbus Mono or fallback -->
-  <style>
-    @font-face {
-      font-family: 'Nimbus Mono';
-      src: url('NimbusMono.woff2') format('woff2'),
-           url('NimbusMono.woff') format('woff');
-      font-weight: normal;
-      font-style: normal;
-    }
-  </style>
 </head>
 <body>
   <header>
     <h1>Akshay Joshi</h1>
     <p>
-      <strong>Email:</strong> akshayjo@andrew.cmu.edu &nbsp; | &nbsp; 
-      <strong>Phone:</strong> 412-999-8546 &nbsp; | &nbsp;
+      <strong>Email:</strong> akshayjo@andrew.cmu.edu &nbsp;|&nbsp;
+      <strong>Phone:</strong> 412-999-8546 &nbsp;|&nbsp;
       <a href="https://www.linkedin.com/in/akshayjoshi1811">LinkedIn</a>
     </p>
   </header>
-  <main>
+  <nav>
+    <a href="index.html" class="active">Home</a>
+    <a href="skills.html">Skills</a>
+    <a href="experience.html">Experience</a>
+    <a href="projects.html">Projects</a>
+    <a href="papers.html">Papers</a>
+  </nav>
+  <div class="container">
+
+    <section>
+      <h2>Profile</h2>
+      <p>
+        I am a Master's student at Carnegie Mellon University, specializing in Computer Systems and Networking. My passion lies in building efficient, scalable, and robust solutions in systems and network engineering. I have hands-on experience implementing custom TCP features over UDP, developing dynamic memory allocators, and building Linux-based command-line shells, which demonstrate my skills in concurrency, performance optimization, and low-level programming. My work also extends to simulating dynamic networks and analyzing routing protocols, reflecting my interest in both the theoretical and practical aspects of networking.
+      </p>
+      <p>
+        My technical toolkit includes C/C++, Go, Python, Java, CUDA, OpenMP, MPI, and a deep familiarity with Linux, networking stacks, and performance engineering. I am eager to explore roles in system software engineering, network engineering, or data center networking, where I can contribute to building the next generation of computing infrastructure.
+      </p>
+    </section>
+
     <section>
       <h2>Education</h2>
       <ul>
           <strong>Carnegie Mellon University</strong>, Pittsburgh, PA<br>
-          <strong>M.S. in Computer Systems and Networking;</strong> GPA: 3.69/4.0 (Expected: Dec 2025)
+          M.S. in Computer Systems and Networking; GPA: 3.69/4.0 (Expected: Dec 2025)
+          <br>
           <br>
           <em>Relevant Coursework:</em>
           <ul>
@@ -41,111 +49,27 @@
             <li>14-736 Distributed Systems</li>
             <li>14-741 Introduction to Information Security</li>
           </ul>
-        </br>
+
+          </br>
+
           <strong>KLE Technological University</strong>, Hubli, India<br>
-          <strong>Bachelor of Engineering in Computer Science;</strong> GPA: 9.37/10.0 (Graduated: Jun 2024)
+          Bachelor of Engineering in Computer Science; GPA: 9.37/10.0 (Graduated: Jun 2024)
+          <br>
           <br>
           <em>Relevant Coursework:</em>
           <ul>
             <li>Operating System Principles</li>
             <li>Principles of Compiler Design</li>
-            <li>Database Management System</li>
             <li>Computer Organization &amp; Architecture</li>
+            <li>Database Management System</li>
+            <li>Machine Learning</li>
             <li>Data Structures &amp; Algorithms</li>
             <li>Object Oriented Programming</li>
           </ul>
       </ul>
     </section>
 
-    <section>
-      <h2>Skills</h2>
-      <ul>
-        <li><strong>Languages/Libraries:</strong> C/C++, Java, Go, Python, SQL, CUDA, OpenMP, MPI, x86 Assembly, Socket programming</li>
-        <li><strong>Tools/Technologies/Environment:</strong> GDB, Git, Wireshark, Cisco Packet Tracer, Docker, Junos OS, Linux</li>
-        <li><strong>Networking:</strong> TCP/IP, L2/L3, DHCP, DNS, BGP, MPLS</li>
-      </ul>
-    </section>
-
-    <section>
-      <h2>Experience</h2>
-      <ul>
-          <strong>Pivotree</strong> - Software Engineer Intern<br>
-          Bangalore, India | Feb 2024 - Jun 2024
-          <ul>
-            <li>Worked on Order Management System and implemented features to handle inventory, orders, and admin interface.</li>
-            <li>Implemented an algorithm to route orders to the most efficient fulfillment center based on geographic location and availability, improving order fulfillment speed by 7%.</li>
-            <li>Mitigated race conditions through optimistic locking with atomic version validation.</li>
-            <li>Engineered Redis caching layer for high-frequency SKU queries, decreasing database load by 40%.</li>
-          </ul>
-      </ul>
-    </section>
-
-    <section>
-      <h2>Academic Projects</h2>
-      <ul>
-          <strong>Parallel Wire Routing with OpenMP</strong> (Feb 2025, CMU)
-          <ul>
-            <li>Parallelized a wire routing algorithm for optimal wire placements and minimal overlaps.</li>
-            <li>Parallelization at two levels: within wires for faster route generation and across wires for concurrent processing.</li>
-            <li>Achieved a 2.5x speedup on wire routing by optimizing on memory latencies.</li>
-            <li>Observed ~13x speedups as algorithm scales up to 64 threads. Higher thread counts see diminishing returns due to task distribution overheads.</li>
-          </ul>
-          </br>
-          <strong>CMU-TCP (Custom TCP Implementation)</strong> (Nov 2024, CMU)
-          <ul>
-            <li>Developed a custom TCP using UDP sockets. Augmented UDP with flow control, retransmission, and throughput to achieve reliable connection setup and teardown.</li>
-            <li>Implemented three-way handshake and dynamic sliding window algorithm to adapt window size and prevent buffer overflow.</li>
-            <li>Programmed TCP Reno congestion control algorithm with slow start, congestion avoidance, multiplicative decrease, and timeout phases to handle congestion events, optimize data flow, and minimize packet loss.</li>
-          </ul>
-          </br>
-          <strong>MixNet</strong> (Sep 2024, CMU)
-          <ul>
-            <li>Simulated a dynamic network with real-time routing updates and recomputed shortest paths after topology changes.</li>
-            <li>Implemented spanning tree protocol to prevent loop storms and improved privacy amongst nodes using random routing and buffer mechanism.</li>
-            <li>Analyzed performance of ring network (63ms) vs tree network (230ms) to form a spanning tree in a topology of 8 nodes.</li>
-          </ul>
-          </br>
-          <strong>HTTP Server/Client</strong> (Dec 2024, CMU)
-          <ul>
-            <li>Implemented a robust multi-threaded HTTP server to handle concurrent client connections.</li>
-            <li>Engineered HTTP client with pipelining and parallel connections, achieving 4.8x speedup with 8 parallel connections.</li>
-            <li>Resolved resource dependencies using topological sort, enabling 60% faster page loads.</li>
-          </ul>
-          </br>
-          <strong>Tiny Linux Shell</strong> (Nov 2024, CMU)
-          <ul>
-            <li>Implemented a command-line shell supporting job control, parallel signal handling, and I/O redirection.</li>
-            <li>Integrated signal handlers for SIGCHLD, SIGINT, and SIGTSTP to ensure proper receipt of signals to process groups.</li>
-            <li>Ensured safe access of shared job lists using signal blocking to handle race conditions.</li>
-          </ul>
-          </br>
-          <strong>Dynamic Memory Allocator</strong> (Nov 2024, CMU)
-          <ul>
-            <li>Implemented dynamic memory allocator: a package with malloc, free, realloc, and calloc functions.</li>
-            <li>Optimized memory utilization to 74.4% using best-fit allocation and mini block encoding.</li>
-            <li>Enhanced throughput to 12,800 kilo-OPS/sec by managing free blocks in segregated lists.</li>
-          </ul>
-      </ul>
-    </section>
-
-    <section>
-      <h2>Academic Papers</h2>
-      <ul>
-        <li>
-          <a href="https://drive.google.com/file/d/1RM-pKwr3SdxpeJ_-Q_7bZBg9OnSjtbyk/view?usp=sharing">
-            Forensics Analysis in Kubernetes using Blockchain (1st Author)
-          </a><br>
-          Presented at International Conference on Computer Communication and Informatics 2024 - Coimbatore, India
-        </li>
-        <li>
-          <a href="https://link.springer.com/chapter/10.1007/978-981-99-7633-1_32">
-            Image Captioning using CNN-LSTM (1st Author)
-          </a><br>
-          Akshay Joshi, et al. "Image Captioning using CNN-LSTM". ERCICA 2023: Advances in Communication and Applications, Volume 2, 2024, pp 421 - 433
-        </li>
-      </ul>
-    </section>
-  </main>
+  </div>
   <footer>
     <p>&copy; 2025 Akshay Joshi</p>
   </footer>
