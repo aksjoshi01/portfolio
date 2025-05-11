@@ -4,14 +4,22 @@ body {
   color: #222;
   margin: 0;
   padding: 0 1rem;
-  max-width: 700px;
-  margin-left: auto;
-  margin-right: auto;
 }
 
 header, footer {
   text-align: center;
   margin-top: 2rem;
+}
+
+main {
+  width: 100%;
+  max-width: 1100px; /* Increased width for desktop readability */
+  margin-left: auto;
+  margin-right: auto;
+  background: #fff;
+  padding: 2rem 2.5rem;
+  border-radius: 8px;
+  box-shadow: 0 2px 12px rgba(0,0,0,0.04);
 }
 
 h1, h2 {
@@ -20,7 +28,7 @@ h1, h2 {
 }
 
 section {
-  margin-bottom: 2rem;
+  margin-bottom: 2.5rem;
 }
 
 a {
@@ -34,5 +42,17 @@ a:hover {
 ul {
   list-style-type: square;
   padding-left: 1.5rem;
+}
+
+@media (max-width: 1200px) {
+  main {
+    max-width: 96vw;
+    padding: 1rem;
+  }
+}
+@media (max-width: 700px) {
+  main {
+    padding: 0.5rem;
+  }
 }
 

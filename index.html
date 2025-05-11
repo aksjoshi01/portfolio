@@ -19,53 +19,129 @@
 <body>
   <header>
     <h1>Akshay Joshi</h1>
-    <p>Email: akshayjo@andrew.cmu.edu | <a href="https://www.linkedin.com/in/akshayjoshi1811">LinkedIn</a></p>
+    <p>
+      <strong>Email:</strong> akshayjo@andrew.cmu.edu &nbsp; | &nbsp; 
+      <strong>Phone:</strong> 412-999-8546 &nbsp; | &nbsp;
+      <a href="https://www.linkedin.com/in/akshayjoshi1811">LinkedIn</a>
+    </p>
   </header>
   <main>
     <section>
       <h2>Education</h2>
       <ul>
-        <li><strong>Carnegie Mellon University</strong>, MS in Computer Systems, Networking and Telecommunications (GPA: 3.69/4.0), Expected Dec 2025</li>
-        <li><strong>KLE Technological University</strong>, BE in Computer Science (GPA: 9.37/10.0), Graduated Jun 2024</li>
+          <strong>Carnegie Mellon University</strong>, Pittsburgh, PA<br>
+          <strong>M.S. in Computer Systems and Networking;</strong> GPA: 3.69/4.0 (Expected: Dec 2025)
+          <br>
+          <em>Relevant Coursework:</em>
+          <ul>
+            <li>15-213/15-513/14-513 Introduction to Computer Systems</li>
+            <li>15-418/15-618 Parallel Computer Architecture and Programming</li>
+            <li>15-441/15-641 Networking and the Internet</li>
+            <li>18-756 Packet Switching and Computer Networks</li>
+            <li>14-736 Distributed Systems</li>
+            <li>14-741 Introduction to Information Security</li>
+          </ul>
+        </br>
+          <strong>KLE Technological University</strong>, Hubli, India<br>
+          <strong>Bachelor of Engineering in Computer Science;</strong> GPA: 9.37/10.0 (Graduated: Jun 2024)
+          <br>
+          <em>Relevant Coursework:</em>
+          <ul>
+            <li>Operating System Principles</li>
+            <li>Principles of Compiler Design</li>
+            <li>Database Management System</li>
+            <li>Computer Organization &amp; Architecture</li>
+            <li>Data Structures &amp; Algorithms</li>
+            <li>Object Oriented Programming</li>
+          </ul>
       </ul>
     </section>
+
     <section>
       <h2>Skills</h2>
       <ul>
-        <li>Languages: C/C++, Java, Go, Python, SQL, CUDA, OpenMP, MPI, x86 assembly, Socket programming</li>
-        <li>Tools: GDB, Git, Wireshark, Docker, Linux</li>
-        <li>Networking: TCP/IP, DHCP, DNS, BGP, MPLS</li>
+        <li><strong>Languages/Libraries:</strong> C/C++, Java, Go, Python, SQL, CUDA, OpenMP, MPI, x86 Assembly, Socket programming</li>
+        <li><strong>Tools/Technologies/Environment:</strong> GDB, Git, Wireshark, Cisco Packet Tracer, Docker, Junos OS, Linux</li>
+        <li><strong>Networking:</strong> TCP/IP, L2/L3, DHCP, DNS, BGP, MPLS</li>
       </ul>
     </section>
+
     <section>
       <h2>Experience</h2>
       <ul>
-        <li>
-          <strong>Pivotree</strong>, Software Engineer Intern, Feb 2024 - Jun 2024
+          <strong>Pivotree</strong> - Software Engineer Intern<br>
+          Bangalore, India | Feb 2024 - Jun 2024
           <ul>
-            <li>Implemented features for Order Management System, improved fulfillment speed by 7%.</li>
-            <li>Engineered Redis caching layer, decreasing database load by 40%.</li>
+            <li>Worked on Order Management System and implemented features to handle inventory, orders, and admin interface.</li>
+            <li>Implemented an algorithm to route orders to the most efficient fulfillment center based on geographic location and availability, improving order fulfillment speed by 7%.</li>
+            <li>Mitigated race conditions through optimistic locking with atomic version validation.</li>
+            <li>Engineered Redis caching layer for high-frequency SKU queries, decreasing database load by 40%.</li>
           </ul>
-        </li>
       </ul>
     </section>
+
     <section>
-      <h2>Projects</h2>
+      <h2>Academic Projects</h2>
+      <ul>
+          <strong>Parallel Wire Routing with OpenMP</strong> (Feb 2025, CMU)
+          <ul>
+            <li>Parallelized a wire routing algorithm for optimal wire placements and minimal overlaps.</li>
+            <li>Parallelization at two levels: within wires for faster route generation and across wires for concurrent processing.</li>
+            <li>Achieved a 2.5x speedup on wire routing by optimizing on memory latencies.</li>
+            <li>Observed ~13x speedups as algorithm scales up to 64 threads. Higher thread counts see diminishing returns due to task distribution overheads.</li>
+          </ul>
+          </br>
+          <strong>CMU-TCP (Custom TCP Implementation)</strong> (Nov 2024, CMU)
+          <ul>
+            <li>Developed a custom TCP using UDP sockets. Augmented UDP with flow control, retransmission, and throughput to achieve reliable connection setup and teardown.</li>
+            <li>Implemented three-way handshake and dynamic sliding window algorithm to adapt window size and prevent buffer overflow.</li>
+            <li>Programmed TCP Reno congestion control algorithm with slow start, congestion avoidance, multiplicative decrease, and timeout phases to handle congestion events, optimize data flow, and minimize packet loss.</li>
+          </ul>
+          </br>
+          <strong>MixNet</strong> (Sep 2024, CMU)
+          <ul>
+            <li>Simulated a dynamic network with real-time routing updates and recomputed shortest paths after topology changes.</li>
+            <li>Implemented spanning tree protocol to prevent loop storms and improved privacy amongst nodes using random routing and buffer mechanism.</li>
+            <li>Analyzed performance of ring network (63ms) vs tree network (230ms) to form a spanning tree in a topology of 8 nodes.</li>
+          </ul>
+          </br>
+          <strong>HTTP Server/Client</strong> (Dec 2024, CMU)
+          <ul>
+            <li>Implemented a robust multi-threaded HTTP server to handle concurrent client connections.</li>
+            <li>Engineered HTTP client with pipelining and parallel connections, achieving 4.8x speedup with 8 parallel connections.</li>
+            <li>Resolved resource dependencies using topological sort, enabling 60% faster page loads.</li>
+          </ul>
+          </br>
+          <strong>Tiny Linux Shell</strong> (Nov 2024, CMU)
+          <ul>
+            <li>Implemented a command-line shell supporting job control, parallel signal handling, and I/O redirection.</li>
+            <li>Integrated signal handlers for SIGCHLD, SIGINT, and SIGTSTP to ensure proper receipt of signals to process groups.</li>
+            <li>Ensured safe access of shared job lists using signal blocking to handle race conditions.</li>
+          </ul>
+          </br>
+          <strong>Dynamic Memory Allocator</strong> (Nov 2024, CMU)
+          <ul>
+            <li>Implemented dynamic memory allocator: a package with malloc, free, realloc, and calloc functions.</li>
+            <li>Optimized memory utilization to 74.4% using best-fit allocation and mini block encoding.</li>
+            <li>Enhanced throughput to 12,800 kilo-OPS/sec by managing free blocks in segregated lists.</li>
+          </ul>
+      </ul>
+    </section>
+
+    <section>
+      <h2>Academic Papers</h2>
       <ul>
         <li>
-          <strong>Parallel Wire Routing with OpenMP</strong> (CMU, Feb 2025): Achieved 2.5x speedup in wire routing via parallelization.
+          <a href="https://drive.google.com/file/d/1RM-pKwr3SdxpeJ_-Q_7bZBg9OnSjtbyk/view?usp=sharing">
+            Forensics Analysis in Kubernetes using Blockchain (1st Author)
+          </a><br>
+          Presented at International Conference on Computer Communication and Informatics 2024 - Coimbatore, India
         </li>
         <li>
-          <strong>CMU-TCP</strong> (Nov 2024): Developed custom TCP over UDP with congestion control.
-        </li>
-        <li>
-          <strong>MixNet</strong> (Sep 2024): Simulated dynamic network with privacy enhancements.
-        </li>
-        <li>
-          <strong>HTTP Server/Client</strong> (Dec 2024): Multi-threaded HTTP server and pipelined client.
-        </li>
-        <li>
-          <strong>Tiny Linux Shell</strong> (Nov 2024): Implemented shell with job control and signal handling.
+          <a href="https://link.springer.com/chapter/10.1007/978-981-99-7633-1_32">
+            Image Captioning using CNN-LSTM (1st Author)
+          </a><br>
+          Akshay Joshi, et al. "Image Captioning using CNN-LSTM". ERCICA 2023: Advances in Communication and Applications, Volume 2, 2024, pp 421 - 433
         </li>
       </ul>
     </section>
