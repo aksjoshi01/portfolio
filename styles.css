@@ -1,0 +1,38 @@
+body {
+  font-family: 'Nimbus Mono', 'Monaco', 'Consolas', monospace;
+  background: #f9f9f9;
+  color: #222;
+  margin: 0;
+  padding: 0 1rem;
+  max-width: 700px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+header, footer {
+  text-align: center;
+  margin-top: 2rem;
+}
+
+h1, h2 {
+  font-weight: bold;
+  margin-bottom: 0.5rem;
+}
+
+section {
+  margin-bottom: 2rem;
+}
+
+a {
+  color: #007acc;
+  text-decoration: none;
+}
+a:hover {
+  text-decoration: underline;
+}
+
+ul {
+  list-style-type: square;
+  padding-left: 1.5rem;
+}
+
