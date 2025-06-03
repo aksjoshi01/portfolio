@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <title>Akshay Joshi | 15-618 Projects</title>
+  <link rel="stylesheet" href="../styles.css">
+</head>
+
+<body>
+  <header>
+    <h1>Akshay Joshi</h1>
+    <p>
+    <strong>Email:</strong> akshayjo@andrew.cmu.edu &nbsp;|&nbsp;
+    <strong>Phone:</strong> 412-999-8546 &nbsp;|&nbsp;
+    <a href="https://www.linkedin.com/in/akshayjoshi1811">LinkedIn</a>
+    </p>
+  </header>
+  <nav>
+    <a href="../index.html">Home</a>
+    <a href="skills.html">Skills</a>
+    <a href="experience.html">Experience</a>
+    <a href="projects.html">Projects</a>
+    <a href="papers.html">Papers</a>
+  </nav>
+  <div class="container">
+    <section>
+      <p><a href="projects.html">← Back to all courses</a></p>
+      <h2>15-618: Parallel Computer Architecture and Programming</h2>
+
+      <ul>
+        <h2>1. Parallel VLSI Wire Routing</h2>
+
+        <h3>Introduction & Objectives</h3>
+        <p>
+          The VLSI wire routing problem is a fundamental challenge in computer chip design, where the goal is to
+          efficiently route wires between specified endpoints while minimizing overlap. For this project, I implemented
+          parallel solutions to this complex optimization problem using two different parallel programming models:
+          OpenMP (shared memory) and MPI (distributed memory).
+        </p>
+        <p>
+          The objective was to route wires with Manhattan-style paths (90-degree bends only) within a 2D grid,
+          minimizing the cost function defined as the sum of squares of wire overlaps across the grid. This metric is
+          critical in VLSI design as it corresponds to the number of metal layers needed in chip fabrication-fewer
+          overlaps mean fewer layers and lower manufacturing costs.
+        </p>
+
+        <h3>Implementation Approach</h3>
+
+        <h4>Shared Memory Parallelism (OpenMP)</h4>
+        <p>I explored two distinct parallelization strategies:</p>
+
+        <p><strong>Within-Wires Approach:</strong></p>
+        <ul>
+          <li>Parallelized the exploration of potential routes for each wire independently</li>
+          <li>For each wire with endpoints not on a straight line, there are (Δx + Δy) possible routes</li>
+          <li>Used static task assignment for uniform workload distribution</li>
+          <li>Optimized memory access patterns to improve cache locality</li>
+          <li>Eliminated unnecessary precomputation of routes by storing only critical bend points</li>
+        </ul>
+
+        <p><strong>Across-Wires Approach:</strong></p>
+        <ul>
+          <li>Parallelized the routing of multiple wires simultaneously</li>
+          <li>Implemented batching to control the frequency of occupancy matrix updates</li>
+          <li>Used dynamic scheduling to handle variable computation costs across different wires</li>
+          <li>Employed atomic operations to ensure thread-safe updates to the occupancy matrix</li>
+          <li>Optimized data types (using long long instead of double) to reduce type conversion overhead</li>
+        </ul>
+
+        <h4>Distributed Memory Parallelism (MPI)</h4>
+        <p>Building on my OpenMP implementation, I developed a message-passing version using MPI that could scale across
+          multiple compute nodes:</p>
+
+        <p><strong>Optimized Communication Strategy:</strong></p>
+        <ul>
+          <li>Initially experimented with sending complete occupancy matrices between processors, but found this
+            inefficient</li>
+          <li>Evolved to sending only wire route updates using MPI_AllGather, significantly reducing communication
+            overhead</li>
+          <li>Implemented batch processing to amortize communication costs</li>
+          <li>Carefully balanced staleness (outdated occupancy information) against performance</li>
+        </ul>
+
+        <p><strong>Load Balancing:</strong></p>
+        <ul>
+          <li>Identified load imbalance using TAU Commander profiling</li>
+          <li>Implemented randomized wire distribution by sorting the wires vector</li>
+          <li>Ensured all processors participated in computation rather than using a manager/worker model</li>
+          <li>Used MPI_Scatter to distribute wires evenly across processors</li>
+        </ul>
+
+        <h3>Results & Performance Analysis</h3>
+
+        <p><strong>OpenMP Implementation:</strong></p>
+        <ul>
+          <li>Achieved near-linear speedup (4.8x with 8 threads) for the within-wires approach on smaller problems</li>
+          <li>The across-wires approach demonstrated excellent scalability (4.6x with 8 threads) even on larger problems
+          </li>
+          <li>Cache performance analysis revealed that smaller problems showed decreasing cache misses with more
+            threads, while larger problems showed increasing cache misses</li>
+          <li>Batch size experiments confirmed a clear tradeoff between performance and solution quality</li>
+        </ul>
+
+        <p><strong>MPI Implementation:</strong></p>
+        <ul>
+          <li>Successfully scaled to 128 processors across multiple nodes</li>
+          <li>Achieved 3.5x speedup with 8 processors on easy test cases</li>
+          <li>Medium and hard test cases showed good scaling up to 4 processors, with diminishing returns beyond that
+          </li>
+          <li>Identified communication overhead as the primary limiting factor for perfect scaling</li>
+          <li>Demonstrated that batch size significantly impacts both performance and solution quality</li>
+        </ul>
+
+        <h3>Challenges & Insights</h3>
+        <p>
+          The most significant challenges came from balancing computation and communication costs. For OpenMP, ensuring
+          thread-safe updates to the shared occupancy matrix without excessive synchronization overhead was crucial. For
+          MPI, the key insight was recognizing that sending only wire route updates rather than entire occupancy
+          matrices dramatically improved performance.
+        </p>
+        <p>
+          Performance analysis revealed interesting patterns in cache behavior across different problem sizes and thread
+          counts. The project demonstrated the practical application of parallel programming concepts like work
+          distribution, synchronization strategies, and communication optimization in solving real-world computational
+          problems.
+        </p>
+        <p>
+          This project provided valuable experience in parallel algorithm design, performance debugging, and
+          understanding the tradeoffs between different parallel programming models when applied to the same underlying
+          problem.
+        </p>
+
+
+
+        <h2>2. Circle Renderer using CUDA</h2>
+
+
+        <h2>3. Lock-free Priority-aware Work Stealing</h2>
+
+      </ul>
+
+
+
+    </section>
+  </div>
+  <footer>
+    <p>&copy; 2025 Akshay Joshi</p>
+  </footer>
+</body>
+
+</html>
