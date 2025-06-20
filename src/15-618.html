@@ -11,9 +11,9 @@
   <header>
     <h1>Akshay Joshi</h1>
     <p>
-    <strong>Email:</strong> akshayjo@andrew.cmu.edu &nbsp;|&nbsp;
-    <strong>Phone:</strong> 412-999-8546 &nbsp;|&nbsp;
-    <a href="https://www.linkedin.com/in/akshayjoshi1811">LinkedIn</a>
+      <strong>Email:</strong> akshayjo@andrew.cmu.edu &nbsp;|&nbsp;
+      <strong>Phone:</strong> 412-999-8546 &nbsp;|&nbsp;
+      <a href="https://www.linkedin.com/in/akshayjoshi1811">LinkedIn</a>
     </p>
   </header>
   <nav>
@@ -28,118 +28,638 @@
       <p><a href="projects.html">← Back to all courses</a></p>
       <h2>15-618: Parallel Computer Architecture and Programming</h2>
 
-      <ul>
-        <h2>1. Parallel VLSI Wire Routing</h2>
+      <h2>1. Parallel VLSI Wire Routing</h2>
 
-        <h3>Introduction & Objectives</h3>
-        <p>
-          The VLSI wire routing problem is a fundamental challenge in computer chip design, where the goal is to
-          efficiently route wires between specified endpoints while minimizing overlap. For this project, I implemented
-          parallel solutions to this complex optimization problem using two different parallel programming models:
-          OpenMP (shared memory) and MPI (distributed memory).
+      <h3>Problem Overview and Motivation</h3>
+      <p>
+        The VLSI wire routing problem represents one of the most computationally intensive challenges in modern computer
+        chip design. As semiconductor devices continue to shrink and complexity increases, the task of
+        efficiently routing thousands of interconnections between components becomes increasingly critical. The
+        fundamental objective is to route wires between specified endpoints while minimizing overlaps, as these overlaps
+        directly correspond to the number of metal layers required in the fabrication process. More layers
+        translate to higher manufacturing costs and increased complexity, making optimization essential for practical
+        chip production.
+      </p>
+
+      <p>
+        For this project, I tackled the wire routing optimization problem using both shared memory (OpenMP) and
+        distributed memory (MPI) parallel programming paradigms. The routing constraints required
+        Manhattan-style paths with 90-degree bends only, and the optimization goal was to minimize the sum of squares of
+        wire overlaps across a 2D grid. This metric serves as a proxy for the manufacturing cost, where even a single
+        point requiring an additional metal layer increases the overall process complexity.
+      </p>
+
+      <div class="project-image">
+        <img src="../images/wire_routing_before.jpg" alt="VLSI wire routing problem initial state" width="600">
+        <p class="image-caption">Fig 1: Initial state of the wire routing problem showing unrouted connections</p>
+      </div>
+
+      <h3>Initial Approach and Optimization Journey</h3>
+      <p>
+        My initial implementation began with a straightforward approach that precomputed all possible routes for each
+        wire and stored them in a 2D array indexed by a map structure. However, performance profiling quickly revealed
+        significant inefficiencies. The map operations, with their O(log N) complexity, introduced unnecessary overhead
+        that could be eliminated through more efficient data structures. Additionally, the precomputation phase was
+        consuming substantial memory and computation time without providing proportional benefits.
+      </p>
+
+      <p>
+        The first major optimization involved replacing the map-based storage with array-based indexing, where each wire
+        corresponded to a specific array index. This simple change improved single-thread performance from 0.75 seconds
+        to 0.65 seconds on the easy_4096 test case. However, more significant improvements were needed to achieve the
+        target performance benchmarks.
+      </p>
+
+      <p>
+        Through detailed performance analysis using profiling tools, I discovered that 80% of the execution time was
+        spent in the route cost computation function, which also accounted for over 60% of cache misses. This bottleneck
+        identification led to a fundamental redesign of the algorithm. Rather than precomputing and storing complete
+        routes, I realized that only the first bend point coordinates were necessary to reconstruct any Manhattan-style
+        path, since there are exactly (Δx + Δy) possible routes between any two points.
+      </p>
+
+      <h3>Parallelization Strategies</h3>
+
+      <h4>Within-Wires Approach (OpenMP)</h4>
+      <p>
+        The within-wires parallelization strategy focused on exploiting parallelism within the route exploration for
+        individual wires. For each wire, multiple threads would simultaneously evaluate different potential
+        routes, computing their costs independently. Since route cost calculations are inherently independent
+        operations, this approach provided excellent opportunities for parallel execution without complex
+        synchronization requirements.
+      </p>
+
+      <p>
+        I implemented static task assignment to distribute route evaluations uniformly across available threads,
+        avoiding the runtime overhead of dynamic scheduling for this uniform workload. The key optimization involved
+        eliminating the precomputation phase entirely and computing routes on-demand using only the bend point
+        coordinates. This reduced memory pressure and improved cache locality, as threads no longer needed to access
+        large precomputed route arrays.
+      </p>
+
+      <p>
+        The within-wires approach achieved remarkable speedup on smaller problems, reaching 4.8x speedup with 8 threads
+        on the easy test cases. However, performance gains diminished on larger problems due to increased cache
+        contention and memory access patterns that became less favorable as the problem size scaled.
+      </p>
+
+      <h4>Across-Wires Approach (OpenMP)</h4>
+      <p>
+        The across-wires strategy represented a more ambitious parallelization approach, processing multiple wires
+        simultaneously in parallel batches. This method required careful synchronization to ensure thread-safe
+        updates to the shared occupancy matrix, as multiple wires could potentially update the same grid locations
+        concurrently. I implemented atomic operations for occupancy matrix updates, allowing different grid cells to be
+        updated simultaneously while preventing race conditions on individual cells.
+      </p>
+
+      <p>
+        Dynamic scheduling proved essential for this approach, as the computational cost of routing different wires
+        varied significantly based on their endpoint coordinates and the current state of the occupancy matrix. The
+        batching mechanism allowed for periodic synchronization points while maintaining parallel efficiency. Batch size
+        became a critical tuning parameter, representing a tradeoff between parallel efficiency and solution quality.
+      </p>
+
+      <p>
+        The across-wires implementation demonstrated excellent scalability, achieving 4.6x speedup with 8 threads even
+        on larger problem instances. The approach proved more robust to problem size scaling compared to the
+        within-wires method, maintaining good performance characteristics across different test cases.
+      </p>
+
+      <h4>Distributed Memory Implementation (MPI)</h4>
+      <p>
+        Building upon the OpenMP implementations, I developed an MPI-based version capable of scaling across multiple
+        compute nodes. The initial design challenge involved determining the optimal communication strategy.
+        Early experiments with broadcasting complete occupancy matrices between processors proved inefficient due to the
+        large communication overhead relative to computation time.
+      </p>
+
+      <p>
+        The breakthrough came with implementing a communication strategy that exchanged only wire route updates using
+        MPI_AllGather operations. This approach dramatically reduced communication volume while maintaining the
+        necessary information synchronization between processors. Batch processing became even more critical in the MPI
+        implementation, as it amortized communication costs across multiple wire routing operations.
+      </p>
+
+      <p>
+        Load balancing presented unique challenges in the distributed memory environment. Initial implementations
+        suffered from significant load imbalance, which I addressed through randomized wire distribution and ensuring
+        all processors participated in computation rather than using a manager-worker paradigm. The MPI_Scatter
+        operation provided efficient wire distribution across processors while maintaining good load balance
+        characteristics.
+      </p>
+
+      <h3>Performance Analysis and Results</h3>
+      <p>
+        The performance evaluation revealed distinct scaling characteristics for different problem sizes and
+        parallelization approaches. On smaller test cases (easy_4096), both OpenMP implementations achieved near-linear
+        speedup, with the within-wires approach reaching 4.8x speedup and the across-wires approach achieving 4.6x
+        speedup with 8 threads. Cache performance analysis showed that smaller problems benefited from reduced cache
+        misses as thread count increased, as more of the working set could fit in the combined cache hierarchy.
+      </p>
+
+      <p>
+        Larger problem instances (medium and hard test cases) exhibited different scaling behavior. The across-wires
+        approach maintained better performance characteristics on larger problems, while the within-wires approach
+        showed diminishing returns. This difference stemmed from the memory access patterns and cache behavior under
+        different parallelization strategies. The across-wires approach benefited from better data locality as threads
+        worked on spatially related portions of the problem.
+      </p>
+
+      <p>
+        The MPI implementation successfully scaled to 128 processors across multiple compute nodes, achieving 3.5x
+        speedup with 8 processors on easy test cases. However, scaling efficiency decreased on larger problems, with
+        medium and hard test cases showing good scaling only up to 4 processors before communication overhead began to
+        dominate. This limitation highlighted the importance of communication-to-computation ratios in distributed
+        memory parallelization.
+      </p>
+
+      <p>
+        Cache miss analysis provided valuable insights into the performance characteristics. For small problems,
+        increasing thread count generally reduced total cache misses as more cache resources became available. However,
+        larger problems showed the opposite trend, with cache misses increasing as thread count grew due to increased
+        memory pressure and reduced cache effectiveness per thread.
+      </p>
+
+      <div class="project-image">
+        <img src="../images/wire_routing_after.JPG" alt="VLSI wire routing solution after parallel implementation"
+          width="600">
+        <p class="image-caption">Fig 2: Optimized wire routing after parallel implementation showing minimal overlaps
         </p>
-        <p>
-          The objective was to route wires with Manhattan-style paths (90-degree bends only) within a 2D grid,
-          minimizing the cost function defined as the sum of squares of wire overlaps across the grid. This metric is
-          critical in VLSI design as it corresponds to the number of metal layers needed in chip fabrication-fewer
-          overlaps mean fewer layers and lower manufacturing costs.
-        </p>
+      </div>
 
-        <h3>Implementation Approach</h3>
+      <h3>Key Challenges and Insights</h3>
+      <p>
+        The most significant technical challenge involved balancing computation and communication costs across different
+        parallelization strategies. In the OpenMP implementations, ensuring thread-safe updates to the shared occupancy
+        matrix without excessive synchronization overhead required careful design of atomic operations and data access
+        patterns. The key insight was recognizing that fine-grained locking would be prohibitively expensive, leading to
+        the atomic update strategy for individual grid cells.
+      </p>
 
-        <h4>Shared Memory Parallelism (OpenMP)</h4>
-        <p>I explored two distinct parallelization strategies:</p>
+      <p>
+        For the MPI implementation, the critical insight was understanding that communication overhead could be
+        dramatically reduced by transmitting only route updates rather than complete occupancy matrices. This
+        optimization reduced communication volume by orders of magnitude while maintaining the necessary synchronization
+        between processors. The challenge of managing stale occupancy information (where processors worked with slightly
+        outdated information) required careful balancing between performance and solution quality.
+      </p>
 
-        <p><strong>Within-Wires Approach:</strong></p>
-        <ul>
-          <li>Parallelized the exploration of potential routes for each wire independently</li>
-          <li>For each wire with endpoints not on a straight line, there are (Δx + Δy) possible routes</li>
-          <li>Used static task assignment for uniform workload distribution</li>
-          <li>Optimized memory access patterns to improve cache locality</li>
-          <li>Eliminated unnecessary precomputation of routes by storing only critical bend points</li>
-        </ul>
+      <p>
+        Performance debugging revealed the importance of cache behavior in parallel implementations. The project
+        demonstrated how memory access patterns that work well in sequential code can become problematic in parallel
+        implementations due to cache contention and false sharing. Understanding these effects was crucial for achieving
+        good scalability, particularly in the transition from small to large problem sizes.
+      </p>
 
-        <p><strong>Across-Wires Approach:</strong></p>
-        <ul>
-          <li>Parallelized the routing of multiple wires simultaneously</li>
-          <li>Implemented batching to control the frequency of occupancy matrix updates</li>
-          <li>Used dynamic scheduling to handle variable computation costs across different wires</li>
-          <li>Employed atomic operations to ensure thread-safe updates to the occupancy matrix</li>
-          <li>Optimized data types (using long long instead of double) to reduce type conversion overhead</li>
-        </ul>
+      <h3>Experimental Validation</h3>
+      <p>
+        Comprehensive testing across multiple problem sizes and hardware configurations validated the effectiveness of
+        the parallel implementations. The sensitivity studies revealed important tradeoffs between solution quality and
+        computational performance. Varying the probability of choosing random routes (simulated annealing parameter)
+        showed the expected tradeoff between computation time and solution quality, with higher probabilities reducing
+        computation time at the cost of potentially suboptimal solutions.
+      </p>
 
-        <h4>Distributed Memory Parallelism (MPI)</h4>
-        <p>Building on my OpenMP implementation, I developed a message-passing version using MPI that could scale across
-          multiple compute nodes:</p>
+      <p>
+        Problem size sensitivity analysis demonstrated the importance of algorithmic choices in parallel
+        implementations. Smaller problems benefited from different optimization strategies compared to larger problems,
+        highlighting the need for adaptive approaches in real-world applications. The batch size experiments confirmed
+        that this parameter significantly impacts both performance and solution quality, requiring careful tuning for
+        optimal results.
+      </p>
 
-        <p><strong>Optimized Communication Strategy:</strong></p>
-        <ul>
-          <li>Initially experimented with sending complete occupancy matrices between processors, but found this
-            inefficient</li>
-          <li>Evolved to sending only wire route updates using MPI_AllGather, significantly reducing communication
-            overhead</li>
-          <li>Implemented batch processing to amortize communication costs</li>
-          <li>Carefully balanced staleness (outdated occupancy information) against performance</li>
-        </ul>
+      <p>
+        Cross-platform validation between the GHC and PSC computing environments revealed the importance of hardware
+        characteristics in parallel performance. The PSC environment showed different scaling characteristics, with the
+        across-wires approach maintaining better performance similarity to the GHC results compared to the within-wires
+        approach. This validated the robustness of the across-wires parallelization strategy across different hardware
+        architectures.
+      </p>
 
-        <p><strong>Load Balancing:</strong></p>
-        <ul>
-          <li>Identified load imbalance using TAU Commander profiling</li>
-          <li>Implemented randomized wire distribution by sorting the wires vector</li>
-          <li>Ensured all processors participated in computation rather than using a manager/worker model</li>
-          <li>Used MPI_Scatter to distribute wires evenly across processors</li>
-        </ul>
+      <h2>2. Circle Renderer using CUDA</h2>
 
-        <h3>Results & Performance Analysis</h3>
+      <h3>Problem Overview and Computational Challenge</h3>
+      <p>
+        The circle rendering problem presents a classic parallel computing challenge: efficiently rendering thousands of
+        semi-transparent circles on a 2D canvas while maintaining correct color blending and visual fidelity. The
+        sequential approach processes each circle individually across the entire image, but this becomes computationally
+        prohibitive when dealing with large numbers of circles and high-resolution images. The fundamental challenge
+        lies in parallelizing the rendering pipeline while preserving the order-dependent nature of alpha blending and
+        avoiding race conditions when multiple circles contribute to the same pixel.
+      </p>
 
-        <p><strong>OpenMP Implementation:</strong></p>
-        <ul>
-          <li>Achieved near-linear speedup (4.8x with 8 threads) for the within-wires approach on smaller problems</li>
-          <li>The across-wires approach demonstrated excellent scalability (4.6x with 8 threads) even on larger problems
-          </li>
-          <li>Cache performance analysis revealed that smaller problems showed decreasing cache misses with more
-            threads, while larger problems showed increasing cache misses</li>
-          <li>Batch size experiments confirmed a clear tradeoff between performance and solution quality</li>
-        </ul>
+      <p>
+        The problem complexity scales quadratically with both the number of circles and image resolution. Each pixel
+        potentially requires evaluation against every circle in the scene to determine coverage and color contribution.
+        For a typical test case with thousands of circles on a high-resolution canvas, this translates to millions of
+        circle-pixel intersection tests, making GPU acceleration essential for real-time performance.
+      </p>
 
-        <p><strong>MPI Implementation:</strong></p>
-        <ul>
-          <li>Successfully scaled to 128 processors across multiple nodes</li>
-          <li>Achieved 3.5x speedup with 8 processors on easy test cases</li>
-          <li>Medium and hard test cases showed good scaling up to 4 processors, with diminishing returns beyond that
-          </li>
-          <li>Identified communication overhead as the primary limiting factor for perfect scaling</li>
-          <li>Demonstrated that batch size significantly impacts both performance and solution quality</li>
-        </ul>
+      <h3>Implementation Architecture and Work Decomposition</h3>
+      <p>
+        My CUDA implementation employed a pixel-based decomposition strategy, organizing the image into 32×32 pixel
+        blocks with each block assigned to a CUDA thread block. This spatial decomposition approach leveraged the
+        GPU's hierarchical thread organization, where each thread block contained 1024 threads corresponding to the
+        pixels within that block. The choice of 32×32 blocks optimized GPU occupancy while maintaining manageable shared
+        memory requirements for intermediate computations .
+      </p>
 
-        <h3>Challenges & Insights</h3>
-        <p>
-          The most significant challenges came from balancing computation and communication costs. For OpenMP, ensuring
-          thread-safe updates to the shared occupancy matrix without excessive synchronization overhead was crucial. For
-          MPI, the key insight was recognizing that sending only wire route updates rather than entire occupancy
-          matrices dramatically improved performance.
-        </p>
-        <p>
-          Performance analysis revealed interesting patterns in cache behavior across different problem sizes and thread
-          counts. The project demonstrated the practical application of parallel programming concepts like work
-          distribution, synchronization strategies, and communication optimization in solving real-world computational
-          problems.
-        </p>
-        <p>
-          This project provided valuable experience in parallel algorithm design, performance debugging, and
-          understanding the tradeoffs between different parallel programming models when applied to the same underlying
-          problem.
-        </p>
+      <p>
+        The rendering algorithm operated in iterative batches, processing circles in groups equal to the number of
+        threads per block. This batching strategy addressed the memory limitations inherent in GPU shared memory while
+        enabling efficient parallel processing of circle data. Each iteration involved three distinct phases:
+        intersection testing, prefix sum compaction, and pixel shading, with careful synchronization between phases to
+        maintain data consistency.
+      </p>
+
+      <h4>Intersection Testing and Spatial Optimization</h4>
+      <p>
+        The first phase of each iteration involved parallel intersection testing, where each thread evaluated whether a
+        specific circle intersected with the current thread block's spatial region. This block-level culling
+        significantly reduced the computational overhead by eliminating circles that had no visual contribution to the
+        pixels within the block. The intersection test computed the minimum distance between the circle center and the
+        block's bounding rectangle, comparing it against the circle's radius to determine potential overlap.
+      </p>
+
+      <p>
+        This spatial optimization proved crucial for performance, as it transformed the problem from O(n×m) complexity
+        (where n is the number of circles and m is the number of pixels) to a more manageable workload where each pixel
+        only processed relevant circles. The effectiveness of this optimization varied with circle distribution and
+        size, showing dramatic improvements in scenarios with spatially localized circles.
+      </p>
+
+      <h4>Parallel Prefix Sum for Compaction</h4>
+      <p>
+        Following intersection testing, the algorithm employed a parallel prefix sum operation to compact the list of
+        relevant circles for each block. This compaction phase used shared memory arrays to store boolean
+        intersection results, then computed exclusive prefix sums to determine the final storage locations for circles
+        that intersected the current block. The prefix sum implementation utilized the efficient up-sweep and down-sweep
+        phases, minimizing shared memory bank conflicts and maximizing parallel efficiency.
+      </p>
+
+      <p>
+        The compaction process eliminated the need for conditional branching during the pixel shading phase, ensuring
+        uniform workload distribution across threads. This approach maintained high GPU utilization by avoiding thread
+        divergence that would occur if threads had to skip processing for non-intersecting circles.
+      </p>
+
+      <h3>Pixel Shading and Color Composition</h3>
+      <p>
+        The final phase involved parallel pixel shading, where each thread computed the final color for its assigned
+        pixel by evaluating contributions from all relevant circles. The shading algorithm implemented proper alpha
+        blending, accumulating color contributions in back-to-front order to maintain visual correctness. Each circle's
+        contribution was computed using distance-based coverage calculations, determining the circle's influence on the
+        pixel's final color.
+      </p>
+
+      <p>
+        The color composition process required careful handling of floating-point precision and alpha channel
+        mathematics. The implementation used single-precision floating-point arithmetic throughout the shading pipeline,
+        balancing computational efficiency with sufficient color accuracy for visual applications. The final pixel
+        colors were clamped to valid ranges and converted to appropriate integer formats for display.
+      </p>
+
+      <h3>Memory Hierarchy Optimization</h3>
+      <p>
+        Effective utilization of GPU memory hierarchy was central to achieving high performance. The implementation
+        strategically used shared memory within each thread block to store intermediate results from intersection
+        testing and circle compaction. This approach significantly reduced global memory accesses, which represent the
+        primary bottleneck in GPU applications due to their high latency and limited bandwidth.
+      </p>
+
+      <p>
+        The batching strategy was specifically designed to fit within shared memory constraints while maximizing data
+        reuse. By processing circles in batches equal to the thread block size, the algorithm ensured that shared memory
+        usage remained predictable and within hardware limits. This design choice enabled the algorithm to scale
+        effectively across different GPU architectures with varying shared memory capacities.
+      </p>
+
+      <h3>Synchronization Strategy and Race Condition Prevention</h3>
+      <p>
+        The implementation employed strategic synchronization points using __syncthreads() barriers to coordinate
+        parallel execution phases. The first synchronization point occurred at the beginning of each iteration,
+        ensuring all threads completed the previous iteration before starting new computations. This prevented data
+        races in shared memory arrays that stored intersection results and intermediate computations.
+      </p>
+
+      <p>
+        Additional synchronization points were placed after intersection testing and prefix sum computation, ensuring
+        that all threads completed their assigned work before proceeding to subsequent phases. This synchronization
+        strategy maintained correctness while minimizing performance overhead, as the barriers only occurred at natural
+        phase boundaries where synchronization was mathematically required.
+      </p>
+
+      <h3>Performance Analysis and Bottleneck Identification</h3>
+      <p>
+        Performance evaluation revealed that the primary bottleneck occurred during the pixel shading phase,
+        specifically in the ShadePixel function calls. Despite the block-level intersection culling, many pixels
+        still processed circles that ultimately contributed minimal or no color due to distance-based coverage
+        calculations. This represented unnecessary computational overhead, particularly in scenarios with large circles
+        that intersected blocks but covered only small portions of the pixels within those blocks.
+      </p>
+
+      <p>
+        The bottleneck identification process involved systematic timing analysis of different algorithm phases. By
+        instrumenting the code with CUDA events and profiling tools, I determined that approximately 70-80% of execution
+        time was spent in pixel shading operations, with the remainder distributed across intersection testing and
+        memory management operations. This analysis guided optimization efforts toward more efficient pixel-level
+        culling strategies.
+      </p>
+
+      <h3>Memory Bandwidth Optimization Strategies</h3>
+      <p>
+        To address memory bandwidth limitations, the implementation employed several optimization strategies. The
+        batching approach reduced global memory accesses by processing circles in groups that fit within shared memory,
+        enabling high-speed intra-block communication. Additionally, the algorithm minimized redundant memory transfers
+        by computing circle parameters on-demand rather than pre-loading complete datasets.
+      </p>
+
+      <p>
+        Coalesced memory access patterns were maintained throughout the implementation, ensuring that threads within
+        each warp accessed contiguous memory locations whenever possible. This optimization was particularly
+        important for loading pixel data and storing final rendering results, where uncoalesced accesses would
+        significantly impact performance due to increased memory transaction overhead.
+      </p>
+
+      <h3>Alternative Approaches and Implementation Evolution</h3>
+      <p>
+        The development process involved exploring multiple parallelization strategies before arriving at the final
+        pixel-based approach. The initial implementation attempted circle-based decomposition, where each thread
+        rendered a complete circle across the entire image. However, this approach suffered from severe synchronization
+        overhead, as multiple circles contributing to the same pixel required atomic operations or locks to maintain
+        rendering correctness.
+      </p>
+
+      <p>
+        The atomic operations approach proved fundamentally flawed for this application, as the high contention for
+        pixel updates essentially serialized the rendering process. Pixels receiving contributions from multiple
+        circles became severe bottlenecks, eliminating the parallel processing advantages that motivated the GPU
+        implementation. This experience highlighted the importance of minimizing shared resource contention in parallel
+        algorithm design.
+      </p>
+
+      <p>
+        The intermediate approach involved naive pixel-based parallelization, where each thread processed a single pixel
+        but evaluated all circles in the scene. While this eliminated the synchronization problems of the
+        circle-based approach, it suffered from extreme computational inefficiency due to unnecessary circle
+        evaluations. The vast majority of circle-pixel pairs resulted in no visual contribution, representing wasted
+        computational resources.
+      </p>
+
+      <h3>Performance Results and Scalability Analysis</h3>
+      <p>
+        The final implementation demonstrated significant performance improvements over sequential rendering approaches,
+        achieving speedups ranging from 10x to 50x depending on scene complexity and circle distribution. Test cases
+        with spatially localized circles showed the highest performance gains, as the block-level intersection culling
+        proved most effective in these scenarios. Conversely, scenes with uniformly distributed circles across the
+        entire canvas showed more modest improvements due to reduced culling efficiency.
+      </p>
+
+      <p>
+        Scalability analysis revealed that performance scaled well with GPU compute capability, showing consistent
+        improvements when moving from lower-end to higher-end GPU architectures. The implementation effectively
+        utilized available parallel processing resources, maintaining high occupancy rates across different hardware
+        configurations. Memory bandwidth limitations became the primary constraint on very high-end GPUs, suggesting
+        opportunities for further optimization in future implementations.
+      </p>
+
+      <h3>Technical Insights and Lessons Learned</h3>
+      <p>
+        The project provided valuable insights into GPU programming best practices and parallel algorithm design
+        principles. The importance of spatial locality became particularly evident, as algorithms that could exploit
+        spatial coherence in the problem domain achieved significantly better performance than those that could not.
+        This insight applies broadly to graphics and simulation applications where spatial relationships are fundamental
+        to the computational problem.
+      </p>
+
+      <p>
+        The development process also highlighted the critical importance of profiling and performance measurement in
+        parallel programming. Initial assumptions about bottlenecks proved incorrect in several cases, emphasizing
+        the need for data-driven optimization decisions. The systematic approach to identifying performance limitations
+        through careful instrumentation and measurement proved essential for achieving optimal results.
+      </p>
+
+      <p>
+        Finally, the project demonstrated the value of iterative algorithm development in parallel computing. The
+        progression from naive approaches through increasingly sophisticated optimizations illustrated how complex
+        parallel algorithms often require multiple design iterations to achieve optimal performance. Each iteration
+        provided learning opportunities that informed subsequent improvements, ultimately leading to a highly optimized
+        final implementation.
+      </p>
 
 
+      <h2>3. Lock-free Priority-aware Work Stealing</h2>
 
-        <h2>2. Circle Renderer using CUDA</h2>
+      <h3>Problem Overview and Motivation</h3>
+      <p>
+        The Lock-free Priority-aware Work Stealing project addresses a fundamental limitation in modern parallel
+        computing: the inability of traditional work-stealing schedulers to respect task priorities while maintaining
+        scalability. While classic work-stealing algorithms excel at load balancing and scalability through their
+        decentralized design, they are inherently priority-oblivious, treating all tasks equally regardless of their
+        computational importance or urgency. This limitation becomes particularly problematic in applications such as
+        branch-and-bound algorithms, graph search, and soft real-time systems, where the execution order of tasks
+        directly impacts computational efficiency and result quality.
+      </p>
 
+      <p>
+        The challenge lies in integrating priority-awareness into work-stealing without compromising the scalability
+        benefits that make work-stealing attractive. Traditional priority scheduling relies on centralized priority
+        queues, which introduce synchronization bottlenecks that can severely limit parallel performance. The goal was
+        to develop a scheduler that maintains the decentralized, scalable nature of work-stealing while ensuring that
+        higher-priority tasks are executed preferentially across all worker threads, minimizing priority inversion and
+        maintaining high throughput under dynamic workloads.
+      </p>
 
-        <h2>3. Lock-free Priority-aware Work Stealing</h2>
+      <h3>Technical Architecture and Design Evolution</h3>
+      <p>
+        The implementation underwent several critical design iterations, each addressing specific limitations discovered
+        during development. The initial approach maintained a single lock-free deque per processor, storing tasks of
+        all priorities together. While conceptually simple, this design suffered from frequent priority inversions and
+        high computational overhead, as processors had to scan entire deques to locate high-priority tasks, resulting in
+        poor cache performance and inefficient scheduling.
+      </p>
 
-      </ul>
+      <p>
+        The second iteration introduced a global state mechanism to coordinate the current priority level across all
+        processors. This centralized approach ensured that only the highest-priority tasks were executed at any
+        given time, but it introduced severe synchronization bottlenecks and race conditions. The frequent global
+        coordination required significant contention management and ultimately proved impractical for high-performance
+        workloads due to scalability limitations.
+      </p>
 
+      <p>
+        The final design adopted a fully decentralized model where each processor independently tracked its local
+        priority level. This approach eliminated global bottlenecks and allowed processors to make independent
+        progress while still maintaining priority awareness. The key insight was that processors would exhaust all local
+        and stealable tasks at their current priority level before incrementing to the next priority, ensuring strong
+        priority guarantees without centralized coordination.
+      </p>
+
+      <h3>Implementation Details and Lock-free Data Structures</h3>
+      <p>
+        The core implementation utilized C with low-level atomic operations, specifically compare-and-swap (CAS)
+        primitives, to construct thread-safe, non-blocking data structures. Each processor maintained a set of
+        independent lock-free deques, with each deque dedicated to tasks of a specific priority level. The
+        implementation supported three priority levels, with priority 0 representing the highest priority tasks.
+      </p>
+
+      <p>
+        The lock-free deques employed the Chase-Lev design pattern, where local operations occurred at one end of the
+        deque while remote processors performed steal operations from the opposite end. This design minimized
+        contention by spatially separating local and remote access patterns. Explicit memory barriers using
+        __sync_synchronize() were strategically placed at key points in push, pop, and steal operations to ensure
+        correct memory ordering and visibility of updates across all processor cores.
+      </p>
+
+      <p>
+        The stealing mechanism implemented a sophisticated search strategy to balance priority enforcement with
+        performance overhead. Rather than exhaustively searching all processors for stealable tasks at the current
+        priority level, the implementation limited steal attempts to approximately √n processors out of n total
+        processors. This optimization significantly reduced the overhead of unsuccessful steal attempts while
+        maintaining reasonably strong priority guarantees, though it introduced the possibility of occasional priority
+        inversions.
+      </p>
+
+      <h3>Concurrency Control and Race Condition Handling</h3>
+      <p>
+        The implementation carefully addressed various race conditions inherent in concurrent work-stealing systems.
+        Success steal scenarios occurred when an idle processor successfully acquired a task from another processor's
+        deque, demonstrating normal load balancing behavior. Race success steal scenarios involved multiple processors
+        simultaneously attempting to steal the same task, with CAS operations ensuring that only one processor succeeded
+        while others gracefully handled failure by incrementing their local priority.
+      </p>
+
+      <p>
+        Failed steal scenarios represented situations where all processors at the same priority level had empty deques,
+        causing all steal attempts to fail and triggering priority level increments across the system. Priority
+        inversion scenarios occurred when concurrent steal attempts resulted in some processors advancing to higher
+        priority levels before all tasks at the current priority were completed, though the system eventually rebalanced
+        when lower-priority work was finished.
+      </p>
+
+      <p>
+        The CAS-based synchronization strategy tolerated occasional failures without requiring expensive retry
+        mechanisms. A failed CAS operation during stealing did not guarantee that the target deque was empty, only
+        that another processor accessed it concurrently. This design philosophy accepted occasional priority inversions
+        in favor of minimizing synchronization overhead and maintaining high throughput.
+      </p>
+
+      <h3>Performance Analysis and Scalability Characteristics</h3>
+      <p>
+        Comprehensive performance evaluation revealed distinct scaling characteristics across different core counts and
+        workload distributions. The system demonstrated excellent scalability when moving from 4 to 8 cores, with
+        execution time decreasing by more than half due to effective parallel work distribution. The primary factor
+        enabling this performance was the availability of sufficient tasks to keep all cores busy, where the benefits of
+        parallelization significantly outweighed the overhead of task stealing and synchronization.
+      </p>
+
+      <p>
+        However, scaling from 8 to 12 cores showed diminishing returns or even performance degradation in some scenarios
+       . This behavior occurred when the total number of tasks was insufficient to effectively utilize all available
+        cores, causing additional cores to spend more time idle or competing for tasks through stealing mechanisms. The
+        synchronization overhead associated with lock-free stealing operations became more significant as core count
+        increased without proportional increases in available parallelism.
+      </p>
+
+      <p>
+        Task distribution significantly impacted stealing behavior and overall system performance. In scenarios with
+        highly skewed task distributions, where priority 0 tasks were unevenly assigned to different processors, some
+        processors quickly exhausted their local high-priority work while others retained substantial task queues. This
+        imbalance led to increased steal attempts for priority 0 tasks, demonstrating the importance of priority-aware
+        stealing in maintaining good scheduling behavior under uneven workloads.
+      </p>
+
+      <h3>Priority Enforcement Trade-offs</h3>
+      <p>
+        The implementation revealed fundamental trade-offs between strict priority enforcement and execution efficiency
+       . The original design enforced perfect priority ordering by requiring processors to check all other
+        processors before advancing to the next priority level, eliminating priority inversions but introducing
+        significant overhead. The optimized approach limited steal attempts to √n processors, dramatically improving
+        performance while accepting occasional priority inversions.
+      </p>
+
+      <p>
+        Experimental results showed that priority inversions increased roughly quadratically with the number of cores
+        when using the limited checking approach. This trade-off proved acceptable in practice, as the performance
+        benefits of reduced stealing overhead significantly outweighed the occasional out-of-order execution,
+        particularly in workloads where strict priority ordering was desirable but not absolutely critical.
+      </p>
+
+      <p>
+        Comparison with a naive single-deque approach revealed that the priority-aware system was approximately 15% to
+        30% slower in terms of overall execution time. However, this overhead was justified by dramatically improved
+        completion times for high-priority tasks, with more than threefold improvements in worst-case scenarios where
+        critical tasks might otherwise be delayed until the end of execution.
+      </p>
+
+      <h3>Memory Architecture Considerations</h3>
+      <p>
+        The implementation was specifically optimized for modern shared-memory architectures with hardware support for
+        atomic instructions and efficient memory coherence protocols such as MESI. The lock-free design leveraged
+        these hardware features to enable scalable synchronization among worker threads without the overhead of
+        traditional locking mechanisms.
+      </p>
+
+      <p>
+        Cache performance played a crucial role in overall system efficiency. The multi-deque design improved cache
+        locality by grouping tasks of similar priority together, reducing the cache misses associated with
+        priority-based task selection. Memory barriers were strategically placed to ensure correctness while minimizing
+        performance impact, balancing the need for memory ordering guarantees with execution efficiency.
+      </p>
+
+      <p>
+        The stealing mechanism was designed to minimize false sharing and cache contention by ensuring that processors
+        primarily accessed their local deques for task insertion and removal. Remote access patterns during stealing
+        operations were optimized to reduce cache invalidation overhead while maintaining the necessary synchronization
+        guarantees for correct concurrent operation.
+      </p>
+
+      <h3>Experimental Validation and Benchmark Results</h3>
+      <p>
+        The evaluation encompassed multiple test scenarios designed to stress different aspects of the priority-aware
+        work-stealing system. Test scenarios included uniform task distributions with equal execution times,
+        arbitrary execution time variations, unequal task distributions across priority levels, and completely
+        unbalanced processor loads. Each scenario provided insights into different performance characteristics and
+        system behaviors.
+      </p>
+
+      <p>
+        The Fibonacci calculation benchmark provided realistic irregular workloads with varying computational
+        requirements. Tasks were distributed across priority levels in non-uniform patterns to simulate real-world
+        applications where task priorities and computational complexity are not uniformly distributed. This benchmark
+        effectively demonstrated the system's ability to handle dynamic workloads while maintaining priority guarantees
+       .
+      </p>
+
+      <p>
+        Scaling experiments revealed the relationship between task granularity and optimal core utilization. With
+        sufficient task counts, the system scaled well to 8 cores, but performance leveled off or degraded beyond that
+        point when task counts were insufficient to maintain high utilization. These results highlighted the importance
+        of matching parallelism levels to available work quantities in parallel system design.
+      </p>
+
+      <h3>Technical Insights and Future Directions</h3>
+      <p>
+        The project demonstrated that effective priority-aware parallel scheduling requires careful balance between
+        priority enforcement strictness and execution efficiency. Perfect priority ordering proved too expensive for
+        practical use, while completely priority-oblivious scheduling failed to provide necessary guarantees for
+        priority-sensitive applications. The √n stealing strategy represented an effective middle ground that maintained
+        strong priority guarantees while achieving acceptable performance.
+      </p>
+
+      <p>
+        The decentralized approach proved superior to centralized coordination mechanisms, avoiding synchronization
+        bottlenecks while maintaining system-wide priority awareness. This insight applies broadly to parallel
+        system design, where decentralized algorithms often provide better scalability characteristics than their
+        centralized counterparts, even when coordination is necessary.
+      </p>
+
+      <p>
+        The implementation revealed the importance of hardware architecture considerations in lock-free algorithm design
+       . The success of the CAS-based approach depended critically on efficient hardware support for atomic
+        operations and memory coherence protocols. Future implementations could benefit from exploring
+        architecture-specific optimizations and alternative synchronization primitives as they become available.
+      </p>
 
 
     </section>
