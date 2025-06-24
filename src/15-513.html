@@ -92,7 +92,7 @@
                 Non-built-in commands are executed by forking a child process, placing it in its own process group, and
                 invoking `execve` to load the desired executable. Input and output redirection is supported by
                 opening specified files and duplicating file descriptors
-                via `dup2()` before `execve`, ensuring the child’s stdin and stdout are correctly routed[7].
+                via `dup2()` before `execve`, ensuring the child’s stdin and stdout are correctly routed.
             </p>
 
             <p>
